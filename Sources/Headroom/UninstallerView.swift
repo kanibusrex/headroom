@@ -86,8 +86,19 @@ final class UninstallerViewModel: ObservableObject {
 
 struct UninstallerView: View {
     @ObservedObject var model: UninstallerViewModel
+    @Environment(\.screenshotMode) private var screenshotMode
 
     var body: some View {
+        // Presentation modifiers dim the whole view under ImageRenderer,
+        // so screenshot mode renders the bare content.
+        if screenshotMode {
+            core
+        } else {
+            interactive
+        }
+    }
+
+    private var core: some View {
         VStack(spacing: 20) {
             header
             appList
@@ -98,6 +109,10 @@ struct UninstallerView: View {
                 model.loadApps()
             }
         }
+    }
+
+    private var interactive: some View {
+        core
         .sheet(item: $model.selectedApp) { app in
             UninstallSheet(model: model, app: app)
         }
@@ -135,9 +150,15 @@ struct UninstallerView: View {
             HStack(spacing: 6) {
                 Image(systemName: "magnifyingglass")
                     .foregroundStyle(.secondary)
-                TextField("Search", text: $model.searchText)
-                    .textFieldStyle(.plain)
-                    .frame(width: 140)
+                if screenshotMode {
+                    Text("Search")
+                        .foregroundStyle(.tertiary)
+                        .frame(width: 140, alignment: .leading)
+                } else {
+                    TextField("Search", text: $model.searchText)
+                        .textFieldStyle(.plain)
+                        .frame(width: 140)
+                }
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 7)
@@ -156,7 +177,7 @@ struct UninstallerView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                ScrollView {
+                SnapshotFriendlyScrollView {
                     VStack(spacing: 8) {
                         ForEach(model.filteredApps) { app in
                             AppRow(app: app) {
@@ -177,9 +198,7 @@ private struct AppRow: View {
     var body: some View {
         Button(action: onSelect) {
             HStack(spacing: 12) {
-                Image(nsImage: NSWorkspace.shared.icon(forFile: app.url.path))
-                    .resizable()
-                    .frame(width: 34, height: 34)
+                FileIcon(path: app.url.path, size: 34)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(app.name)

@@ -84,7 +84,7 @@ struct CleanupView: View {
     }
 
     private var categoryList: some View {
-        ScrollView {
+        SnapshotFriendlyScrollView {
             VStack(spacing: 10) {
                 ForEach($model.categories) { $state in
                     CategoryRow(state: $state)
@@ -133,9 +133,7 @@ private struct CategoryRow: View {
 
     var body: some View {
         HStack(spacing: 14) {
-            Toggle("", isOn: $state.isSelected)
-                .toggleStyle(.checkbox)
-                .labelsHidden()
+            SnapshotFriendlyCheckbox(isOn: $state.isSelected)
 
             Image(systemName: state.category.symbolName)
                 .font(.system(size: 17, weight: .medium))

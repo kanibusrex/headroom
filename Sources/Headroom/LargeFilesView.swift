@@ -61,9 +61,21 @@ final class LargeFilesViewModel: ObservableObject {
 
 struct LargeFilesView: View {
     @ObservedObject var model: LargeFilesViewModel
+    @Environment(\.screenshotMode) private var screenshotMode
     @State private var showConfirmation = false
 
     var body: some View {
+        // ImageRenderer draws a dimming backdrop for attached presentation
+        // modifiers even when nothing is presented, so skip them in
+        // screenshot mode.
+        if screenshotMode {
+            core
+        } else {
+            interactive
+        }
+    }
+
+    private var core: some View {
         VStack(spacing: 20) {
             header
             fileList
@@ -75,6 +87,10 @@ struct LargeFilesView: View {
                 model.scan()
             }
         }
+    }
+
+    private var interactive: some View {
+        core
         .confirmationDialog(
             "Move \(model.selection.count) file\(model.selection.count == 1 ? "" : "s") (\(formatBytes(model.selectedBytes))) to Trash?",
             isPresented: $showConfirmation,
@@ -118,18 +134,39 @@ struct LargeFilesView: View {
                     .background(.green.opacity(0.12), in: Capsule())
             }
 
-            Picker("Min size", selection: $model.minSizeMB) {
-                Text("100 MB+").tag(100)
-                Text("500 MB+").tag(500)
-                Text("1 GB+").tag(1000)
-            }
-            .pickerStyle(.segmented)
-            .fixedSize()
-            .disabled(model.isScanning)
-            .onChange(of: model.minSizeMB) {
-                model.scan()
+            if screenshotMode {
+                sizePickerMock
+            } else {
+                Picker("Min size", selection: $model.minSizeMB) {
+                    Text("100 MB+").tag(100)
+                    Text("500 MB+").tag(500)
+                    Text("1 GB+").tag(1000)
+                }
+                .pickerStyle(.segmented)
+                .fixedSize()
+                .disabled(model.isScanning)
+                .onChange(of: model.minSizeMB) {
+                    model.scan()
+                }
             }
         }
+    }
+
+    private var sizePickerMock: some View {
+        HStack(spacing: 2) {
+            ForEach([(100, "100 MB+"), (500, "500 MB+"), (1000, "1 GB+")], id: \.0) { tag, label in
+                Text(label)
+                    .font(.caption.weight(.medium))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(
+                        model.minSizeMB == tag ? Color.white.opacity(0.16) : .clear,
+                        in: RoundedRectangle(cornerRadius: 6)
+                    )
+            }
+        }
+        .padding(3)
+        .background(.white.opacity(0.07), in: RoundedRectangle(cornerRadius: 8))
     }
 
     private var fileList: some View {
@@ -153,7 +190,7 @@ struct LargeFilesView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                ScrollView {
+                SnapshotFriendlyScrollView {
                     VStack(spacing: 8) {
                         ForEach(model.files) { file in
                             LargeFileRow(
@@ -215,13 +252,9 @@ private struct LargeFileRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Toggle("", isOn: .init(get: { isSelected }, set: onToggle))
-                .toggleStyle(.checkbox)
-                .labelsHidden()
+            SnapshotFriendlyCheckbox(isOn: .init(get: { isSelected }, set: onToggle))
 
-            Image(nsImage: NSWorkspace.shared.icon(forFile: file.url.path))
-                .resizable()
-                .frame(width: 30, height: 30)
+            FileIcon(path: file.url.path, size: 30)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(file.url.lastPathComponent)

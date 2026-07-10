@@ -25,10 +25,22 @@ enum Tool: String, CaseIterable, Identifiable {
 }
 
 struct ContentView: View {
-    @State private var selectedTool: Tool = .cleanup
-    @StateObject private var cleanerModel = CleanerViewModel()
-    @StateObject private var largeFilesModel = LargeFilesViewModel()
-    @StateObject private var uninstallerModel = UninstallerViewModel()
+    @State private var selectedTool: Tool
+    @StateObject private var cleanerModel: CleanerViewModel
+    @StateObject private var largeFilesModel: LargeFilesViewModel
+    @StateObject private var uninstallerModel: UninstallerViewModel
+
+    init(
+        initialTool: Tool = .cleanup,
+        cleaner: CleanerViewModel? = nil,
+        largeFiles: LargeFilesViewModel? = nil,
+        uninstaller: UninstallerViewModel? = nil
+    ) {
+        _selectedTool = State(initialValue: initialTool)
+        _cleanerModel = StateObject(wrappedValue: cleaner ?? CleanerViewModel())
+        _largeFilesModel = StateObject(wrappedValue: largeFiles ?? LargeFilesViewModel())
+        _uninstallerModel = StateObject(wrappedValue: uninstaller ?? UninstallerViewModel())
+    }
 
     var body: some View {
         HStack(spacing: 0) {
