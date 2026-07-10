@@ -1,0 +1,5 @@
+.build/
+Headroom.app/
+AppIcon.iconset/
+.DS_Store
+.claude/settings.local.json
