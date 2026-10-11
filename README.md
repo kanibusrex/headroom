@@ -2,6 +2,8 @@
 
 **A macOS disk-space utility.** Clear caches, hunt down large files, and uninstall apps cleanly — in a fast, dark-themed native app.
 
+> On Linux? See [Headroom for Linux](https://github.com/kanibusrex/headroom-linux), a terminal app for Arch and Omarchy.
+
 ![Cleanup](docs/screenshots/cleanup.png)
 
 ## Features
